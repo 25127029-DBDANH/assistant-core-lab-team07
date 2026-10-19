@@ -1,0 +1,6 @@
+# pydantic 2.12.5 instead of 2.9.2 (the handout version): 2.9.2 has no prebuilt
+# package for Python 3.14 on Windows, so pip would try to compile it.
+pydantic==2.12.5
+python-dotenv==1.0.1
+pytest==8.3.3
+ruff==0.6.9
