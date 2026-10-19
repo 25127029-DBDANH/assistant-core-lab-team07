@@ -24,13 +24,13 @@ Nếu `pip install` báo lỗi build `pydantic-core`: kiểm tra `requirements.t
 
 | Phần | File | Người phụ trách |
 |---|---|---|
-| Khung dự án, `errors.py`, `models.py`, `service.py`, `__main__.py`, tích hợp, tag | nhiều file | Member 1 |
-| Cấu hình và log | `config.py`, `.env.example`, `logging_setup.py` | Member 2 |
-| Nguồn tri thức | `knowledge.py` (văn phòng, sổ tay) | Member 3 |
-| Tính học phí | `tools.py`, `tests/test_tools.py` | Member 4 |
-| Bộ trả lời | `responder.py` (Protocol, Template, StubLLM) | Member 5 |
-| Bộ định tuyến | `router.py`, `tests/test_router.py` | Member 6 |
-| Tài liệu và test dịch vụ | `docs/architecture.md`, `tests/test_service.py`, `tests/conftest.py`, CI | Member 7 |
+| Khung dự án, `errors.py`, `models.py`, `service.py`, `__main__.py`, tích hợp, tag | nhiều file | Danh |
+| Cấu hình và log | `config.py`, `.env.example`, `logging_setup.py` | Khang |
+| Nguồn tri thức | `knowledge.py` (văn phòng, sổ tay) | Đăng |
+| Tính học phí | `tools.py`, `tests/test_tools.py` | Hạo |
+| Bộ trả lời | `responder.py` (Protocol, Template, StubLLM) | Lam |
+| Bộ định tuyến | `router.py`, `tests/test_router.py` | Hưng |
+| Tài liệu và test dịch vụ | `docs/architecture.md`, `tests/test_service.py`, `tests/conftest.py`, CI | Đạt |
 
 ## Quy trình làm việc
 
