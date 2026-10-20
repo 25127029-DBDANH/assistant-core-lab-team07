@@ -1,4 +1,3 @@
-
 import logging
 import time
 from pathlib import Path
@@ -15,8 +14,7 @@ log = logging.getLogger("assistant_core")
 
 
 class AssistantService:
-    def __init__(self, settings: Settings, offices: OfficeDirectory,
-                 handbook: Handbook, responder: Responder) -> None:
+    def __init__(self, settings: Settings, offices: OfficeDirectory, handbook: Handbook, responder: Responder) -> None:
         self.settings = settings
         self.offices = offices
         self.handbook = handbook
@@ -48,8 +46,13 @@ class AssistantService:
     def _fee(self, text: str) -> Response:
         try:
             credits, retake = parse_credits(text)
-            total = tuition(credits, retake, self.settings.credit_rate_vnd,
-                            self.settings.retake_multiplier, self.settings.max_credits)
+            total = tuition(
+                credits,
+                retake,
+                self.settings.credit_rate_vnd,
+                self.settings.retake_multiplier,
+                self.settings.max_credits,
+            )
         except InvalidRequest as exc:
             return Response(answer=str(exc), intent=Intent.FEE)
         return Response(answer=f"Your tuition is {total:,} VND.", intent=Intent.FEE)
