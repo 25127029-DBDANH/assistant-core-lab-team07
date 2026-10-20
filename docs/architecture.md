@@ -6,16 +6,16 @@ Owner: Member 7 (fill in the TODO parts once the modules exist).
 
 | Module | Responsibility | Owner |
 |---|---|---|
-| `config.py` | read settings from the environment; validate | Member 2 |
-| `errors.py` | named exceptions | Member 1 |
-| `models.py` | public contract: Message, Response, Intent, Source | Member 1 |
-| `router.py` | choose an Intent with simple rules | Member 6 |
-| `knowledge.py` | office directory (CSV) and handbook (JSON) with search | Member 3 |
-| `tools.py` | deterministic tuition calculation | Member 4 |
-| `responder.py` | response generation behind one interface (stub LLM, template) | Member 5 |
-| `service.py` | `AssistantService.handle(Message) -> Response`, the only entry point | Member 1 |
-| `logging_setup.py` | structured JSON logs | Member 2 |
-| `__main__.py` | command-line interface | Member 1 |
+| `config.py` | read settings from the environment; validate | Khang |
+| `errors.py` | named exceptions | Danh |
+| `models.py` | public contract: Message, Response, Intent, Source | Danh |
+| `router.py` | choose an Intent with simple rules | Hưng |
+| `knowledge.py` | office directory (CSV) and handbook (JSON) with search | Đăng |
+| `tools.py` | deterministic tuition calculation | Hạo |
+| `responder.py` | response generation behind one interface (stub LLM, template) | Lam |
+| `service.py` | `AssistantService.handle(Message) -> Response`, the only entry point | Danh |
+| `logging_setup.py` | structured JSON logs | Khang |
+| `__main__.py` | command-line interface | Danh |
 
 ## 2. Service interface
 
