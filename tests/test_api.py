@@ -25,7 +25,6 @@ def test_health(client):
     assert r.status_code == 200 and r.json()["status"] == "ok"
 
 
-@pytest.mark.xfail(reason="TODO Task T1: POST /v1/chat chưa triển khai")
 def test_chat_fee(client):
     r = client.post("/v1/chat", json={"message": "tuition for 18 credits and 2 retake"})
     assert r.status_code == 200
