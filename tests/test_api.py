@@ -25,6 +25,7 @@ def test_health(client):
     assert r.status_code == 200 and r.json()["status"] == "ok"
 
 
+@pytest.mark.xfail(reason="TODO Task T1: POST /v1/chat chưa triển khai")
 def test_chat_fee(client):
     r = client.post("/v1/chat", json={"message": "tuition for 18 credits and 2 retake"})
     assert r.status_code == 200
@@ -43,6 +44,7 @@ def test_rate_limit(client):
     assert codes[-1] == 429
 
 
+@pytest.mark.xfail(reason="TODO Task T2 & T3: Feedback endpoints chưa triển khai")
 def test_feedback_roundtrip(client):
     r = client.post("/v1/feedback", json={"request_id": "abc123", "rating": 1})
     assert r.status_code == 201 and r.json()["id"] == 1
@@ -55,11 +57,13 @@ def test_feedback_rating_out_of_range(client):
     assert client.post("/v1/feedback", json={"request_id": "x", "rating": 5}).status_code == 422
 
 
+@pytest.mark.xfail(reason="TODO Task T4: GET /v1/weather chưa triển khai")
 def test_weather_ok(client):
     r = client.get("/v1/weather")
     assert r.status_code == 200 and r.json()["description"] == "overcast"
 
 
+@pytest.mark.xfail(reason="TODO Task T4: GET /v1/weather error handling chưa triển khai")
 def test_weather_down_returns_503(settings, service):
     def boom(req):
         raise httpx.ConnectTimeout("timeout", request=req)

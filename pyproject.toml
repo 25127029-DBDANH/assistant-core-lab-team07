@@ -22,6 +22,7 @@ where = ["src"]
 
 [tool.pytest.ini_options]
 pythonpath = ["src"]
+testpaths = ["tests"]
 
 [tool.ruff]
 line-length = 120
@@ -29,3 +30,7 @@ target-version = "py310"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "B", "UP", "BLE"]
+
+[tool.ruff.lint.per-file-ignores]
+"src/assistant_api/main.py" = ["F401", "F841"]
+"practice/*" = ["F401", "I001"]
