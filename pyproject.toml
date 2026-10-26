@@ -4,18 +4,33 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "assistant-core"
-version = "0.3.0"
+version = "0.4.0"
 requires-python = ">=3.10"
-dependencies = ["pydantic>=2.7,<3", "python-dotenv>=1.0,<2"]
+dependencies = [
+    "pydantic>=2.7,<3",
+    "python-dotenv>=1.0,<2",
+    "fastapi>=0.115,<0.163",
+    "httpx>=0.27,<0.29",
+    "uvicorn>=0.30,<0.55"
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "ruff>=0.6"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
 
 [tool.pytest.ini_options]
 pythonpath = ["src"]
+testpaths = ["tests"]
 
 [tool.ruff]
 line-length = 120
+target-version = "py310"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "B", "UP", "BLE"]
+
+[tool.ruff.lint.per-file-ignores]
+"src/assistant_api/main.py" = ["F401", "F841"]
+"practice/*" = ["F401", "I001"]
