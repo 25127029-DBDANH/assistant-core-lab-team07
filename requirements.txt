@@ -2,5 +2,8 @@
 # package for Python 3.14 on Windows, so pip would try to compile it.
 pydantic==2.12.5
 python-dotenv==1.0.1
+fastapi>=0.115.0
+httpx>=0.27.2
+uvicorn>=0.30.6
 pytest==8.3.3
 ruff==0.6.9
