@@ -13,7 +13,7 @@ Dự án Study Assistant - Môn CSC10014 (Practical Track).
 
 ```bash
 # Clone repository về máy
-git clone git@github.com:25127029-DBDANH/assistant-core-lab-team07.git
+git clone https://github.com/25127029-DBDANH/assistant-core-lab-team07.git
 cd assistant-core-lab-team07
 
 # Tạo và kích hoạt môi trường ảo
@@ -59,15 +59,15 @@ ruff check .
 > [!NOTE]
 > Mọi thành viên trước khi thực hiện task được giao đều phải tự hoàn thành 5 bài tập warm-up P1–P5 trong thư mục `practice/hello_api.py` trên nhánh riêng và đảm bảo `pytest -q practice/test_hello_api.py` pass 100%.
 
-| STT | Đầu việc (Task) | Mô tả chi tiết phần việc cần làm | File liên quan | Người phụ trách |
+| Issue | Đầu việc (Task) | Mô tả chi tiết phần việc cần làm | File liên quan | Người phụ trách (Assignee) |
 | :---: | :--- | :--- | :--- | :---: |
-| **1** | **T1: Core Chat API** | Triển khai endpoint `POST /v1/chat`: nhận `ChatRequest`, chuyển tiếp vào `service.handle()`, sinh `request_id` ngẫu nhiên (12 ký tự hex) và trả về `ChatResponse`. | `src/assistant_api/main.py` | ` ` |
-| **2** | **T2: Create Feedback** | Triển khai endpoint `POST /v1/feedback`: tiếp nhận `FeedbackIn` (chỉ cho phép rating -1, 0, 1), sinh ID tự tăng, lưu thời gian tạo UTC vào `feedback_store`, trả về `FeedbackOut` với mã `201 Created`. | `src/assistant_api/main.py` | ` ` |
-| **3** | **T3: Admin Feedback Security** | Triển khai endpoint `GET /v1/feedback`: bảo vệ bằng dependency `require_admin` qua header `X-API-Key`, trả về danh sách phản hồi hoặc mã lỗi `401 Unauthorized`. | `src/assistant_api/main.py` | ` ` |
-| **4** | **T4: Weather API & 503 Handler** | Triển khai endpoint `GET /v1/weather`: kết nối `WeatherClient` (Open-Meteo), xử lý bắt ngoại lệ `ExternalServiceError` để trả về HTTP status `503 Service Unavailable`. | `src/assistant_api/main.py` | ` ` |
-| **5** | **H1: Offices Directory & Tests** | Mở rộng class `OfficeDirectory` với method `all()` (sắp xếp danh sách theo tên), tạo route `GET /v1/offices`, và tự viết 2 unit test trong `tests/test_api.py` (check status 200 và có "Library"). | `src/assistant_core/knowledge.py`<br>`src/assistant_api/main.py`<br>`tests/test_api.py` | ` ` |
-| **6** | **Part F: Rate Limiting Bonus** | Tích hợp `RateLimiter` vào đầu endpoint `POST /v1/chat` để chặn spam theo IP (trả về mã `429 Too Many Requests`), mở bỏ `@pytest.mark.skip` để làm xanh test `test_rate_limit`. | `src/assistant_api/main.py`<br>`tests/test_api.py` | ` ` |
-| **7** | **H3 Bonus & H2 Reflection** | Tích hợp thêm 1 Public API bên ngoài (ví dụ Holiday/Currency) áp dụng timeout, retry, cache fallback + Soạn thảo đoạn văn phản tư H2 (5 dòng) giải thích sự khác biệt giữa gọi hàm trực tiếp và Web API. | `src/assistant_api/`<br>`docs/reflection.md` | ` ` |
+| **[#22](https://github.com/25127029-DBDANH/assistant-core-lab-team07/issues/22)** | **T1: Core Chat API** | Triển khai endpoint `POST /v1/chat`: nhận `ChatRequest`, chuyển tiếp vào `service.handle()`, sinh `request_id` ngẫu nhiên (12 ký tự hex) và trả về `ChatResponse`. | `src/assistant_api/main.py` | **Danh** (`@25127029-DBDANH`) |
+| **[#18](https://github.com/25127029-DBDANH/assistant-core-lab-team07/issues/18)** | **T2: Create Feedback** | Triển khai endpoint `POST /v1/feedback`: tiếp nhận `FeedbackIn` (chỉ cho phép rating -1, 0, 1), sinh ID tự tăng, lưu thời gian tạo UTC vào `feedback_store`, trả về `FeedbackOut` với mã `201 Created`. | `src/assistant_api/main.py` | **Khang** (`@ankhang-maker`) |
+| **[#19](https://github.com/25127029-DBDANH/assistant-core-lab-team07/issues/19)** | **T3: Admin Feedback Security** | Triển khai endpoint `GET /v1/feedback`: bảo vệ bằng dependency `require_admin` qua header `X-API-Key`, trả về danh sách phản hồi hoặc mã lỗi `401 Unauthorized`. | `src/assistant_api/main.py` | **Đăng** (`@dhdang2523-coder`) |
+| **[#23](https://github.com/25127029-DBDANH/assistant-core-lab-team07/issues/23)** | **T4: Weather API & 503 Handler** | Triển khai endpoint `GET /v1/weather`: kết nối `WeatherClient` (Open-Meteo), xử lý bắt ngoại lệ `ExternalServiceError` để trả về HTTP status `503 Service Unavailable`. | `src/assistant_api/main.py` | **Hạo** (`@DMH554`) |
+| **[#20](https://github.com/25127029-DBDANH/assistant-core-lab-team07/issues/20)** | **H1: Offices Directory & Tests** | Mở rộng class `OfficeDirectory` với method `all()` (sắp xếp danh sách theo tên), tạo route `GET /v1/offices`, và tự viết 2 unit test trong `tests/test_api.py` (check status 200 và có "Library"). | `src/assistant_core/knowledge.py`<br>`src/assistant_api/main.py`<br>`tests/test_api.py` | **Lam** (`@LamNotNam1607`) |
+| **[#24](https://github.com/25127029-DBDANH/assistant-core-lab-team07/issues/24)** | **Part F: Rate Limiting Bonus** | Tích hợp `RateLimiter` vào đầu endpoint `POST /v1/chat` để chặn spam theo IP (trả về mã `429 Too Many Requests`), mở bỏ `@pytest.mark.skip` để làm xanh test `test_rate_limit`. | `src/assistant_api/main.py`<br>`tests/test_api.py` | **Hưng** (`@pghung2516-netizen`) |
+| **[#21](https://github.com/25127029-DBDANH/assistant-core-lab-team07/issues/21)** | **H3 Bonus & H2 Reflection** | Tích hợp thêm 1 Public API bên ngoài (ví dụ Holiday/Currency) áp dụng timeout, retry, cache fallback + Soạn thảo đoạn văn phản tư H2 (5 dòng) giải thích sự khác biệt giữa gọi hàm trực tiếp và Web API. | `src/assistant_api/`<br>`docs/reflection.md` | **Đạt** (`@EddieOuttaHere`) |
 
 ---
 
@@ -75,7 +75,7 @@ ruff check .
 
 1. **Nhánh làm việc:** Mỗi thành viên checkout nhánh mới từ `main`: `feature/issue-<id>-<ten_task>`.
 2. **Quy chuẩn Commit:** Đặt tên commit theo chuẩn: `<loại>(<module>): <mô tả> (closes #<issue_id>)`.
-   * Ví dụ: `feat(api): implement /v1/chat endpoint (closes #1)`.
+   * Ví dụ: `feat(api): implement /v1/chat endpoint (closes #22)`.
 3. **Mở Pull Request (PR):**
    * Đảm bảo `pytest -q` pass toàn bộ test.
    * Đính kèm ảnh chụp màn hình `/docs` thực hiện gọi thành công `/v1/chat`.
