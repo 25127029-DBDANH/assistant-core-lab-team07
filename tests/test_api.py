@@ -56,6 +56,19 @@ def test_feedback_rating_out_of_range(client):
     assert client.post("/v1/feedback", json={"request_id": "x", "rating": 5}).status_code == 422
 
 
+def test_list_feedback_requires_admin(client):
+    r = client.get("/v1/feedback")
+    assert r.status_code == 401
+    assert r.json()["error"]["code"] == "missing_or_invalid_api_key"
+
+
+def test_list_feedback_returns_list_to_admin(client):
+    r = client.get("/v1/feedback", headers={"X-API-Key": "secret-admin"})
+    assert r.status_code == 200
+    assert isinstance(r.json(), list)
+    assert r.json() == []
+
+
 @pytest.mark.xfail(reason="TODO Task T4: GET /v1/weather chưa triển khai")
 def test_weather_ok(client):
     r = client.get("/v1/weather")
