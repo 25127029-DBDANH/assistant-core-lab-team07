@@ -25,6 +25,20 @@ def test_health(client):
     assert r.status_code == 200 and r.json()["status"] == "ok"
 
 
+def test_offices_status_ok(client):
+    r = client.get("/v1/offices")
+    assert r.status_code == 200
+
+
+def test_offices_include_library_and_are_sorted(client):
+    r = client.get("/v1/offices")
+    offices = r.json()
+    names = [office["name"] for office in offices]
+
+    assert any(office["name"] == "Library" for office in offices)
+    assert names == sorted(names, key=str.casefold)
+
+
 def test_chat_fee(client):
     r = client.post("/v1/chat", json={"message": "tuition for 18 credits and 2 retake"})
     assert r.status_code == 200
