@@ -10,25 +10,39 @@ from __future__ import annotations
 import uuid
 from datetime import datetime, timezone
 
-from fastapi import Depends, FastAPI, Header, HTTPException, Request, status
+from fastapi import Depends, FastAPI, Header, HTTPException, Query, Request, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
+from assistant_api.holiday import HolidayClient, HolidayServiceError
 from assistant_api.ratelimit import RateLimiter
-from assistant_api.schemas import ChatRequest, ChatResponse, ErrorResponse, FeedbackIn, FeedbackOut, Weather
+from assistant_api.schemas import (
+    ChatRequest,
+    ChatResponse,
+    ErrorResponse,
+    FeedbackIn,
+    FeedbackOut,
+    Holiday,
+    HolidayList,
+    Weather,
+)
 from assistant_api.weather import ExternalServiceError, WeatherClient
 from assistant_core import AssistantService, Message, build_service
 from assistant_core.config import Settings, load_settings
 
 
 def create_app(
-    settings: Settings | None = None, service: AssistantService | None = None, weather: WeatherClient | None = None
+    settings: Settings | None = None,
+    service: AssistantService | None = None,
+    weather: WeatherClient | None = None,
+    holiday: HolidayClient | None = None,
 ) -> FastAPI:
     settings = settings or load_settings()
     service = service or build_service(settings)
     weather = weather or WeatherClient(
         settings.weather_url, settings.campus_lat, settings.campus_lon, timeout_s=settings.weather_timeout_s
     )
+    holiday = holiday or HolidayClient()
     limiter = RateLimiter(settings.rate_limit_per_min)  # used only in the BONUS task
     feedback_store: list[FeedbackOut] = []  # Lab 5 replaces this with a database
 
@@ -86,5 +100,44 @@ def create_app(
         #   If ExternalServiceError happens, raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE,
         #   "Weather service unavailable") from None
         raise NotImplementedError("T4")
+
+    # ── H3 Bonus: Public Holiday endpoint ─────────────────────────────────────
+
+    @app.get(
+        "/v1/holidays",
+        response_model=HolidayList,
+        tags=["external"],
+        summary="List public holidays for a country",
+        responses={503: {"model": ErrorResponse}},
+    )
+    def public_holidays(
+        country: str = Query(default="VN", min_length=2, max_length=2, description="ISO 3166-1 alpha-2 country code"),
+        year: int = Query(default=None, ge=2000, le=2100, description="Year (defaults to current year)"),
+    ) -> HolidayList:
+        """Return public holidays from Nager.Date API.
+
+        Applies timeout (5 s), one retry, and a 24-hour in-memory cache.
+        Returns HTTP 503 if the upstream fails and no cached data is available.
+        """
+        try:
+            return holiday.get_holidays(country_code=country, year=year)
+        except HolidayServiceError:
+            raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, "Holiday service unavailable") from None
+
+    @app.get(
+        "/v1/holidays/next",
+        response_model=Holiday | None,
+        tags=["external"],
+        summary="Next upcoming public holiday",
+        responses={503: {"model": ErrorResponse}},
+    )
+    def next_holiday(
+        country: str = Query(default="VN", min_length=2, max_length=2, description="ISO 3166-1 alpha-2 country code"),
+    ) -> Holiday | None:
+        """Return the next upcoming public holiday for a country (or null if none)."""
+        try:
+            return holiday.next_holiday(country_code=country)
+        except HolidayServiceError:
+            raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, "Holiday service unavailable") from None
 
     return app
