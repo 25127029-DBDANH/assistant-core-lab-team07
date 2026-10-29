@@ -75,7 +75,6 @@ def test_rate_limit(client):
     assert codes[-1] == 429
 
 
-@pytest.mark.xfail(reason="TODO Task T2 & T3: Feedback endpoints chưa triển khai")
 def test_feedback_roundtrip(client):
     r = client.post("/v1/feedback", json={"request_id": "abc123", "rating": 1})
     assert r.status_code == 201 and r.json()["id"] == 1
