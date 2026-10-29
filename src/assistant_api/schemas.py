@@ -48,3 +48,19 @@ class ErrorBody(BaseModel):
 
 class ErrorResponse(BaseModel):
     error: ErrorBody
+
+
+# ── Holiday schemas (H3 Bonus) ────────────────────────────────────────────────
+
+
+class Holiday(BaseModel):
+    date: str  # ISO-8601, e.g. "2026-04-30"
+    name: str  # local name
+    global_name: str  # English name
+
+
+class HolidayList(BaseModel):
+    country_code: str
+    year: int
+    holidays: list[Holiday]
+    stale: bool = False  # True when served from cache after an upstream failure
