@@ -83,13 +83,11 @@ def test_list_feedback_returns_list_to_admin(client):
     assert r.json() == []
 
 
-@pytest.mark.xfail(reason="TODO Task T4: GET /v1/weather chưa triển khai")
 def test_weather_ok(client):
     r = client.get("/v1/weather")
     assert r.status_code == 200 and r.json()["description"] == "overcast"
 
 
-@pytest.mark.xfail(reason="TODO Task T4: GET /v1/weather error handling chưa triển khai")
 def test_weather_down_returns_503(settings, service):
     def boom(req):
         raise httpx.ConnectTimeout("timeout", request=req)
