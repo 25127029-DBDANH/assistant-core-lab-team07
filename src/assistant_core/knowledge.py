@@ -38,6 +38,10 @@ class OfficeDirectory:
     def names(self) -> set[str]:
         return set(self._offices)
 
+    def all(self) -> list[Office]:
+        """Return every office ordered alphabetically by its display name."""
+        return sorted(self._offices.values(), key=lambda office: office.name.casefold())
+
     def find(self, text: str) -> Office | None:
         t = text.lower()
         return next((o for name, o in self._offices.items() if name in t), None)
