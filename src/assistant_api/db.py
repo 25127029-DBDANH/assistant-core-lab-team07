@@ -111,10 +111,8 @@ class Repository:
 
     def list_feedback(self, limit: int = 100) -> list[Feedback]:
         with Session(self.engine) as db:
-            # TODO R2 (1 line): newest first, at most `limit` rows. SQL would be:
-            #   SELECT * FROM feedback ORDER BY created_at DESC LIMIT ?
-            # In SQLModel: select(Feedback).order_by(Feedback.created_at.desc()).limit(limit)
-            raise NotImplementedError("R2")
+            statement = select(Feedback).order_by(Feedback.created_at.desc()).limit(limit)
+            return list(db.exec(statement).all())
 
     def intent_stats(self) -> list[dict]:
         """Requests, average latency and unresolved rate per intent."""
