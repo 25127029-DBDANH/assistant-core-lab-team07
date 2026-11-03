@@ -1,20 +1,16 @@
-"""FastAPI application — Lab 4 STARTER.  Run:  uvicorn assistant_api.main:create_app --factory --reload
-
-Most of the file is given. Complete the four TODOs (T1–T4); the tests in tests/test_api.py tell you when you are done.
-
-Endpoints (v1): GET /health, POST /v1/chat, POST /v1/feedback, GET /v1/feedback (admin),
-GET /v1/weather, GET /v1/offices
-"""
+"""FastAPI application with SQLite persistence. Run with `uvicorn assistant_api.main:create_app --factory`."""
 
 from __future__ import annotations
 
+import time
 import uuid
-from datetime import datetime, timezone
+from contextlib import asynccontextmanager
 
 from fastapi import Depends, FastAPI, Header, HTTPException, Query, Request, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
+from assistant_api.db import Repository, init_db, make_engine
 from assistant_api.holiday import HolidayClient, HolidayServiceError
 from assistant_api.ratelimit import RateLimiter
 from assistant_api.schemas import (
@@ -30,6 +26,7 @@ from assistant_api.schemas import (
 from assistant_api.weather import ExternalServiceError, WeatherClient
 from assistant_core import AssistantService, Message, build_service
 from assistant_core.config import Settings, load_settings
+from assistant_core.models import Intent
 
 
 def create_app(
@@ -45,11 +42,25 @@ def create_app(
     )
     holiday = holiday or HolidayClient()
     limiter = RateLimiter(settings.rate_limit_per_min)  # used only in the BONUS task
-    feedback_store: list[FeedbackOut] = []  # Lab 5 replaces this with a database
+    engine = make_engine(settings.database_url)
+    init_db(engine)
+    repo = Repository(engine, settings.session_salt)
+
+    @asynccontextmanager
+    async def lifespan(_: FastAPI):
+        try:
+            yield
+        finally:
+            engine.dispose()
 
     app = FastAPI(
-        title="Study Assistant API", version="1.0.0", description="Backend of the CSC10014 Smart Virtual Assistant."
+        title="Study Assistant API",
+        version="1.0.0",
+        description="Backend of the CSC10014 Smart Virtual Assistant.",
+        lifespan=lifespan,
     )
+    app.state.engine = engine
+    app.state.repository = repo
 
     def error(code: int, key: str, message: str) -> JSONResponse:
         return JSONResponse(status_code=code, content={"error": {"code": key, "message": message}})
@@ -86,18 +97,49 @@ def create_app(
         client = request.client.host if request.client else "unknown"
         if not limiter.allow(client):
             raise HTTPException(status.HTTP_429_TOO_MANY_REQUESTS, "Too many requests")
+        started = time.perf_counter()
         resp = service.handle(Message(text=req.message, session_id=req.session_id))
-        return ChatResponse(**resp.model_dump(), request_id=uuid.uuid4().hex[:12])
+        request_id = uuid.uuid4().hex[:12]
+        repo.record_interaction(
+            raw_session=req.session_id,
+            request_id=request_id,
+            intent=resp.intent.value,
+            topic=resp.sources[0].id if resp.sources else None,
+            resolved=resp.intent is not Intent.UNKNOWN,
+            degraded=resp.degraded,
+            latency_ms=(time.perf_counter() - started) * 1000,
+        )
+        return ChatResponse(**resp.model_dump(), request_id=request_id)
 
     @app.post("/v1/feedback", response_model=FeedbackOut, status_code=201, tags=["feedback"])
     def add_feedback(fb: FeedbackIn) -> FeedbackOut:
-        item = FeedbackOut(**fb.model_dump(), id=len(feedback_store) + 1, created_at=datetime.now(timezone.utc))
-        feedback_store.append(item)
-        return item
+        item = repo.add_feedback(fb.request_id, fb.rating, fb.comment)
+        if item is None:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "Interaction not found")
+        return FeedbackOut(
+            request_id=item.request_id,
+            rating=item.rating,
+            comment=item.comment,
+            id=item.id,
+            created_at=item.created_at,
+        )
 
     @app.get("/v1/feedback", response_model=list[FeedbackOut], tags=["feedback"], dependencies=[Depends(require_admin)])
-    def list_feedback() -> list[FeedbackOut]:
-        return feedback_store
+    def list_feedback(limit: int = Query(default=100, ge=1, le=1000)) -> list[FeedbackOut]:
+        return [
+            FeedbackOut(
+                request_id=item.request_id,
+                rating=item.rating,
+                comment=item.comment,
+                id=item.id,
+                created_at=item.created_at,
+            )
+            for item in repo.list_feedback(limit)
+        ]
+
+    @app.get("/v1/stats/intents", tags=["stats"], dependencies=[Depends(require_admin)])
+    def intent_stats() -> list[dict]:
+        return repo.intent_stats()
 
     @app.get("/v1/weather", response_model=Weather, tags=["external"], responses={503: {"model": ErrorResponse}})
     def campus_weather() -> Weather:
