@@ -76,11 +76,67 @@ def test_rate_limit(client):
 
 
 def test_feedback_roundtrip(client):
-    r = client.post("/v1/feedback", json={"request_id": "abc123", "rating": 1})
+    missing = client.post("/v1/feedback", json={"request_id": "missing", "rating": 1})
+    assert missing.status_code == 404
+
+    chat = client.post("/v1/chat", json={"message": "tuition for 18 credits"})
+    assert chat.status_code == 200
+    request_id = chat.json()["request_id"]
+    r = client.post("/v1/feedback", json={"request_id": request_id, "rating": 1})
     assert r.status_code == 201 and r.json()["id"] == 1
     assert client.get("/v1/feedback").status_code == 401
     listed = client.get("/v1/feedback", headers={"X-API-Key": "secret-admin"})
     assert listed.status_code == 200 and len(listed.json()) == 1
+
+
+def test_data_survives_server_restart(tmp_path, settings, service):
+    database_url = f"sqlite:///{(tmp_path / 'assistant.db').as_posix()}"
+    persistent_settings = settings.model_copy(
+        update={"api_admin_key": "secret-admin", "database_url": database_url, "session_salt": "restart-test-salt"}
+    )
+
+    def app_with_database():
+        return create_app(
+            persistent_settings,
+            service,
+            weather_with(lambda req: httpx.Response(200, json=OK_JSON)),
+            holiday_with(lambda req: httpx.Response(200, json=OK_HOLIDAY_JSON)),
+        )
+
+    first_app = app_with_database()
+    with TestClient(first_app) as first_client:
+        chat = first_client.post(
+            "/v1/chat", json={"message": "tuition for 18 credits and 2 retake", "session_id": "restart-session"}
+        )
+        assert chat.status_code == 200
+        request_id = chat.json()["request_id"]
+
+        feedback = first_client.post(
+            "/v1/feedback", json={"request_id": request_id, "rating": -1, "comment": "Needs review"}
+        )
+        assert feedback.status_code == 201
+
+    restarted_app = app_with_database()
+    with TestClient(restarted_app) as restarted_client:
+        headers = {"X-API-Key": "secret-admin"}
+        listed = restarted_client.get("/v1/feedback", headers=headers)
+        assert listed.status_code == 200
+        assert listed.json() == [
+            {
+                "request_id": request_id,
+                "rating": -1,
+                "comment": "Needs review",
+                "id": 1,
+                "created_at": feedback.json()["created_at"],
+            }
+        ]
+
+        stats = restarted_client.get("/v1/stats/intents", headers=headers)
+        assert stats.status_code == 200
+        assert len(stats.json()) == 1
+        assert stats.json()[0]["intent"] == "fee"
+        assert stats.json()[0]["requests"] == 1
+        assert stats.json()[0]["unresolved"] == 0
 
 
 def test_feedback_rating_out_of_range(client):
