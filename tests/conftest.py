@@ -18,7 +18,7 @@ DATA_DIR = Path(__file__).resolve().parent.parent / "data"
 
 @pytest.fixture
 def settings() -> Settings:
-    return Settings(data_dir=DATA_DIR)
+    return Settings(data_dir=DATA_DIR, database_url="sqlite://", session_salt="test-salt")
 
 
 @pytest.fixture
