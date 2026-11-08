@@ -1,4 +1,3 @@
-import pytest
 from sqlmodel import Session, select
 
 from assistant_api.db import ChatSession, Interaction, Repository, hash_session, init_db, make_engine
@@ -27,7 +26,6 @@ def test_one_session_many_interactions():
         assert len(db.exec(select(Interaction)).all()) == 3
 
 
-@pytest.mark.xfail(reason="TODO R1: add_feedback chưa triển khai trên starter")
 def test_feedback_requires_existing_interaction():
     repo, _ = make_repo()
     assert repo.add_feedback("missing", 1, None) is None
