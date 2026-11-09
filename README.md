@@ -5,6 +5,7 @@ Dự án Study Assistant - Môn CSC10014 (Practical Track).
 * **Lab 3:** Tách script `assistant_monolith.py` thành package `assistant_core`.
 * **Lab 4:** Chuyển đổi Study Assistant thành dịch vụ Web API qua HTTP bằng **FastAPI**, JSON, bảo mật API Key, gọi dịch vụ bên ngoài và kiểm thử tự động.
 * **Lab 5:** Tích hợp cơ sở dữ liệu **SQLite** qua **SQLModel**, lưu trữ bền vững lịch sử tương tác (`Interaction`) và phản hồi (`Feedback`), bảo vệ quyền riêng tư người dùng.
+* **Lab 6:** Tích hợp trí tuệ nhân tạo an toàn (**Safe RAG**) với bộ tìm kiếm BM25, mô hình ngôn ngữ có kiểm định trích dẫn nguồn (**Grounding Check**), cơ chế từ chối khi không chắc chắn (**Abstain / "I Don't Know"**) và bộ tiêu chuẩn đo lường Benchmark 3 đường dẫn.
 
 ---
 
@@ -67,6 +68,21 @@ ruff check .
 ```
 
 ---
+
+## 👥 Phân chia công việc Lab 6: Adding AI to the Assistant, Safely (Nhóm 7 thành viên)
+
+> [!IMPORTANT]
+> Trọng tâm Lab 6 là xây dựng cơ chế **RAG an toàn (Safe RAG)**, kiểm tra tính có căn cứ (**Grounding Check**), cơ chế từ chối khi không có dữ liệu (**Abstain**), khởi động Mini Search Engine, đo lường Benchmark 3 đường dẫn và giải quyết bài toán xử lý ngôn ngữ thực tế. Mỗi thành viên checkout nhánh riêng theo mã task, hoàn thành công việc, mở PR và pass 100% CI để Tech Lead review và merge.
+
+| STT | Đầu việc (Task) | Mô tả chi tiết phần việc cần làm | File liên quan | Người phụ trách (Assignee) |
+| :---: | :--- | :--- | :--- | :---: |
+| **1** | **Part E — Task A1: Cơ chế Từ chối Trả lời ("I Don't Know")** | Triển khai TODO A1 trong `RagAnswerer.answer`: kiểm tra nếu không tìm thấy đoạn văn (`not hits`) hoặc điểm BM25 cao nhất nhỏ hơn ngưỡng tin cậy `self.min_score`, lập tức trả về `Response(answer=ESCALATE_MSG, intent=Intent.UNKNOWN, path="abstain", escalate=True, confidence=0.0)` trước khi gọi LLM; gỡ bỏ marker `xfail` trên test `test_abstain_when_nothing_relevant`. Phụ trách review PR, tích hợp nhóm và gắn tag phát hành `v0.6-ai`. | `src/assistant_core/rag/answerer.py`<br>`tests/test_rag.py` | **Danh (Leader)** (`@25127029-DBDANH`) |
+| **2** | **Part D — Task A2: Cơ chế Kiểm tra Trích dẫn Nguồn (Grounding Check)** | Triển khai TODO A2 trong hàm `parse_draft`: kiểm tra nếu mô hình không từ chối (`not draft.abstain`) thì bắt buộc phải có ít nhất 1 nguồn trích dẫn và toàn bộ nguồn đó phải là tập con của các đoạn tài liệu tìm thấy (`set(draft.source_ids) <= allowed_ids`), nếu vi phạm thì raise `ProviderError("answer cites sources that were not retrieved")`; gỡ bỏ marker `xfail` trên test `test_citation_of_unretrieved_source_is_rejected`. | `src/assistant_core/llm.py`<br>`tests/test_rag.py` | **Khang** (`@ankhang-maker`) |
+| **3** | **Part B — Task S1: Xây dựng Inverted Index (Mini Search)** | Hoàn thiện hàm `build_index(docs: dict[str, str])` trong `practice/mini_search.py`: tách từ qua `tokenize()`, loại bỏ stop words, xây dựng cấu trúc chỉ mục đảo ánh xạ từ từng từ vựng sang tập hợp ID các tài liệu chứa từ khóa đó (`dict[str, set[str]]`). Viết bổ sung test case kiểm tra tính toàn vẹn của chỉ mục với các từ khóa lặp và từ dừng trong `practice/test_mini_search.py`. | `practice/mini_search.py`<br>`practice/test_mini_search.py` | **Đăng** (`@dhdang2523-coder`) |
+| **4** | **Part B — Task S2 & S3: Thuật toán Score & Rank (Mini Search)** | Hoàn thiện hàm `search(index, query, k=2)` trong `practice/mini_search.py`: tính điểm tương đồng văn bản dựa trên tần số xuất hiện của các từ khóa câu hỏi trong tài liệu (S2), sau đó sắp xếp các tài liệu theo thứ tự điểm giảm dần và lấy top-$k$ kết quả cao nhất (S3). Chạy và pass 100% bộ test `practice/test_mini_search.py` (4/4 tests). | `practice/mini_search.py`<br>`practice/test_mini_search.py` | **Hạo** (`@DMH554`) |
+| **5** | **Part F: Đo lường Benchmark So sánh Ba Đường Dẫn & Báo cáo** | Thực thi kịch bản đo lường `python eval/compare_paths.py` trên 20 test cases mẫu trong `eval/cases.jsonl`, trích xuất bảng số liệu đo lường 3 cơ chế (`deterministic`, `retrieval`, `llm (stub)`). Cập nhật bảng kết quả vào `docs/lab6/path_comparison.md` và viết 3 câu nhận xét phân tích chuyên sâu (lựa chọn luồng cho handbook, lý do kỹ thuật, và đề xuất xử lý trường hợp lỗi E14/E15). | `eval/compare_paths.py`<br>`eval/cases.jsonl`<br>`docs/lab6/path_comparison.md` | **Lam** (`@LamNotNam1607`) |
+| **6** | **Homework H1: Thiết kế 5 Test Cases Mới & Tái đo lường Benchmark** | Thiết kế và bổ sung 5 câu hỏi kiểm thử mới (E21–E25) vào `eval/cases.jsonl`: gồm 3 câu hỏi thông thường kèm nguồn đối chiếu chính xác từ kho tài liệu `data/kb/` (`expect_source`), và 2 câu hỏi ngoài phạm vi hoặc xâm phạm quyền riêng tư yêu cầu từ chối (`expect_abstain: true`). Chạy lại benchmark trên tập 25 câu hỏi, cập nhật bảng so sánh mới và phân tích kết quả vào `docs/lab6/path_comparison.md`. | `eval/cases.jsonl`<br>`eval/compare_paths.py`<br>`docs/lab6/path_comparison.md` | **Hưng** (`@pghung2516-netizen`) |
+| **7** | **Homework H2 Reflection & Bonus H3: Xử lý Từ vựng Số nhiều (Stemming)** | Soạn thảo đoạn văn Reflection H2 (5 dòng) giải thích nguyên lý hoạt động của RAG theo ẩn dụ "kỳ thi mở sách" và phân tích chốt chặn an toàn của code mà LLM không tự làm được. Đồng thời triển khai Bonus H3: trong `src/assistant_core/rag/index.py`, cải tiến hàm `tokenize` để tự động loại bỏ chữ `"s"` ở cuối các từ dài hơn 4 ký tự (xử lý số nhiều), chạy lại benchmark xác nhận case E14 chuyển sang pass và ghi nhận kết quả vào `docs/lab6/path_comparison.md`. | `docs/lab6/path_comparison.md`<br>`src/assistant_core/rag/index.py`<br>`eval/compare_paths.py` | **Đạt** (`@EddieOuttaHere`) |
 
 ## 👥 Phân chia công việc Lab 5: Data & SQL (Nhóm 7 thành viên)
 
