@@ -30,10 +30,27 @@ def test_retrieval_finds_thesis_rule(chunks, kind):
     assert make_index(kind, chunks).search("can I register my thesis with 118 credits")[0].chunk.id == "H26#5.3"
 
 
-@pytest.mark.xfail(reason="TODO A1: abstain chưa triển khai trên starter")
 def test_abstain_when_nothing_relevant(chunks):
     r = RagAnswerer(make_index("bm25", chunks), StubLLM()).answer("what is the capital of France")
-    assert r.path == "abstain" and r.escalate
+    assert r.path == "abstain" and r.escalate and r.confidence == 0.0
+
+
+def test_abstain_when_score_below_min_score():
+    class ExplodingLLM:
+        name = "exploding"
+
+        def complete(self, prompt: str) -> str:
+            raise AssertionError("LLM should not be called when abstaining")
+
+    class FakeHit:
+        score = 1.0
+
+    class FakeIndex:
+        def search(self, query: str, k: int = 3):
+            return [FakeHit()]
+
+    r = RagAnswerer(FakeIndex(), ExplodingLLM(), min_score=2.0).answer("any question")
+    assert r.path == "abstain" and r.escalate and r.confidence == 0.0
 
 
 def test_llm_answer_is_grounded(chunks):
