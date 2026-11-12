@@ -6,7 +6,8 @@ import pytest
 from assistant_core.errors import InvalidRequest, ProviderError
 from assistant_core.guard import is_private_request
 from assistant_core.llm import StubLLM, parse_draft
-from assistant_core.rag.answerer import RagAnswerer
+from assistant_core.models import Intent
+from assistant_core.rag.answerer import ESCALATE_MSG, RagAnswerer
 from assistant_core.rag.chunker import load_folder
 from assistant_core.rag.index import make_index
 from assistant_core.tools import run_tool_call
@@ -30,10 +31,33 @@ def test_retrieval_finds_thesis_rule(chunks, kind):
     assert make_index(kind, chunks).search("can I register my thesis with 118 credits")[0].chunk.id == "H26#5.3"
 
 
-@pytest.mark.xfail(reason="TODO A1: abstain chưa triển khai trên starter")
 def test_abstain_when_nothing_relevant(chunks):
     r = RagAnswerer(make_index("bm25", chunks), StubLLM()).answer("what is the capital of France")
     assert r.path == "abstain" and r.escalate
+    assert r.intent == Intent.UNKNOWN
+    assert r.confidence == 0.0
+    assert r.answer == ESCALATE_MSG
+
+
+def test_abstain_when_score_below_min_score():
+    class ExplodingLLM:
+        name = "exploding"
+
+        def complete(self, prompt: str) -> str:
+            raise AssertionError("LLM should not be called when abstaining")
+
+    class FakeHit:
+        score = 1.0
+
+    class FakeIndex:
+        def search(self, query: str, k: int = 3):
+            return [FakeHit()]
+
+    r = RagAnswerer(FakeIndex(), ExplodingLLM(), min_score=2.0).answer("any question")
+    assert r.path == "abstain" and r.escalate
+    assert r.intent == Intent.UNKNOWN
+    assert r.confidence == 0.0
+    assert r.answer == ESCALATE_MSG
 
 
 def test_llm_answer_is_grounded(chunks):
