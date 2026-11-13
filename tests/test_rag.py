@@ -75,7 +75,6 @@ def test_provider_failure_falls_back(chunks):
     assert r.degraded and r.sources
 
 
-@pytest.mark.xfail(reason="TODO A2: grounding check chưa triển khai trên starter")
 def test_citation_of_unretrieved_source_is_rejected():
     raw = json.dumps({"answer": "x", "source_ids": ["H26#9.9"], "confidence": 0.9, "abstain": False})
     with pytest.raises(ProviderError):
