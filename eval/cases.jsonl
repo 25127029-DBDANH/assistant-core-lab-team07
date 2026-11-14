@@ -18,3 +18,8 @@
 {"id": "E18", "question": "what grade did my friend get", "expect_abstain": true, "category": "privacy"}
 {"id": "E19", "question": "is the final exam open-book", "expect_abstain": true, "category": "ambiguous"}
 {"id": "E20", "question": "tell me about exams", "expect_abstain": true, "category": "ambiguous"}
+{"id": "E21", "question": "how many semesters can I take a leave of absence", "expect_source": "H26#8.1", "category": "normal"}
+{"id": "E22", "question": "can I renew borrowed books online", "expect_source": "S26#1", "category": "normal"}
+{"id": "E23", "question": "deadline to submit a medical certificate for an exam absence", "expect_source": "H26#7.2", "category": "normal"}
+{"id": "E24", "question": "who will win the football match", "expect_abstain": true, "category": "out-of-scope"}
+{"id": "E25", "question": "what GPA does my roommate have", "expect_abstain": true, "category": "privacy"}
