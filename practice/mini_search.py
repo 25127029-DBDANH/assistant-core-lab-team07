@@ -51,10 +51,21 @@ def build_index(docs: dict[str, str]) -> dict[str, set[str]]:
 
 
 def search(index: dict[str, set[str]], query: str, k: int = 2) -> list[tuple[str, int]]:
-    """Score = number of query words found in the document. Return the top k (doc_id, score),
-    highest score first; ties broken by doc_id. Documents with score 0 are not returned."""
+    """S2 & S3: Score documents by query term frequency and rank top-k.
+
+    Score = number of query words (after tokenize) that appear in each document.
+    Rank: sort by score descending (-score), breaking ties by doc_id ascending.
+    Returns [] when no document matches the query.
+    """
     scores: dict[str, int] = {}
+    # S2: Scoring - accumulate count of matching query words per document
     for word in tokenize(query):
         for doc_id in index.get(word, set()):
             scores[doc_id] = scores.get(doc_id, 0) + 1
-    return sorted(scores.items(), key=lambda kv: (-kv[1], kv[0]))[:k]
+
+    if not scores:
+        return []
+
+    # S3: Ranking - sort by (-score, doc_id) and return top k
+    ranked = sorted(scores.items(), key=lambda kv: (-kv[1], kv[0]))
+    return ranked[:k]
