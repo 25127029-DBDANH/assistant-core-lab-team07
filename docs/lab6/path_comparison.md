@@ -83,7 +83,7 @@ llm (stub)            21/25       5/7     0.3     0.6   fails: E13 E15 E19 E20
 ### 1. Phân tích nguyên nhân lỗi E14 (*"can I take 32 credits"*)
 - Truy vấn: `"can I take 32 credits"`.
 - Đoạn văn mong đợi: `H26#6.1` (Credit load: *"A regular semester load is between 14 and 30 credits. Registering more than 30 credits requires approval from the academic advisor"*).
-- Vấn đề từ vựng: 
+- Vấn đề từ vựng:
   - Khác biệt hình thái số ít / số nhiều: `credits` (truy vấn) $\leftrightarrow$ `credit` (tiêu đề mục 6.1 là *"Credit load"*). Khi không có stemming, độ tương đồng từ khóa bị sụt giảm.
   - Khác biệt thuật ngữ diễn đạt: Sinh viên thường dùng `"take ... credits"` để chỉ khối lượng học tập ("credit load").
 
@@ -110,8 +110,20 @@ def tokenize(text: str) -> list[str]:
 ```
 
 ### 3. Kết quả đo lường sau khi cải tiến
-- **Ca kiểm thử E14 chuyển sang PASS hoàn toàn:** 
+- **Ca kiểm thử E14 chuyển sang PASS hoàn toàn:**
   - Điểm số BM25 của `H26#6.1` đạt **4.81** (vượt xa ngưỡng `min_score = 2.0`), vươn lên dẫn đầu bảng xếp hạng (top 1).
   - Cả 2 luồng `retrieval` và `llm (stub)` đều tăng từ 20/25 lên **21/25** câu trả lời chính xác, loại bỏ hoàn toàn mã lỗi E14 khỏi danh sách fails (`fails: E13 E15 E19 E20`).
 - **Hiệu quả trên E15:** Điểm số BM25 của tài liệu thư viện `S26#1` tăng từ **2.30 lên 5.58** nhờ khớp dạng số ít/số nhiều giữa `book` $\leftrightarrow$ `books`.
 - **An toàn ngữ nghĩa:** Các từ vựng `thesis`, `status`, `business` không bị biến dạng, bảo đảm toàn vẹn cho các truy vấn đăng ký khóa luận tốt nghiệp (E01, E10).
+
+---
+
+## Baseline ban đầu của Issue #54 (20 câu, trước cập nhật stemming H3)
+
+Bảng dưới đây lưu kết quả benchmark ban đầu của nhánh Issue #54 sau khi bổ sung chốt chặn A1 và trước khi áp dụng cập nhật tokenizer ở H3. Giữ lại baseline này để đối chiếu với kết quả 20 câu hiện tại ở Phần F; độ trễ là số đo cục bộ trong một lần chạy.
+
+| Path | Correct /20 | Abstain correct /5 | p50 (ms) | Max (ms) | Fails |
+| :--- | :---: | :---: | :---: | :---: | :--- |
+| **deterministic** | 7/20 | 5/5 | 0.0 | 2.1 | E01, E02, E05–E15 |
+| **retrieval** | 16/20 | 4/5 | 0.0 | 1.2 | E13, E14, E15, E19 |
+| **llm (stub)** | 16/20 | 4/5 | 0.3 | 3.3 | E13, E14, E15, E19 |
