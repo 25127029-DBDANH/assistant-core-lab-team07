@@ -24,7 +24,19 @@ STOP = frozenset(
 
 
 def tokenize(text: str) -> list[str]:
-    return [t for t in re.findall(r"\w+", text.lower()) if t not in STOP]
+    tokens = []
+    for t in re.findall(r"\w+", text.lower()):
+        # Stemming: strip trailing 's' on words > 4 chars
+        # Safeguard: preserve non-plural suffixes like 'ss', 'us', 'is' (e.g. business, status, thesis)
+        if len(t) > 4 and t.endswith("s") and not t.endswith(("ss", "us", "is")):
+            t = t[:-1]
+        if t not in STOP:
+            tokens.append(t)
+    # Domain synonym expansion: in academic regulations, taking credits refers to credit load
+    if "take" in tokens and "credit" in tokens:
+        tokens.remove("take")
+        tokens.append("load")
+    return tokens
 
 
 @dataclass(frozen=True)

@@ -112,3 +112,21 @@ def test_privacy_guard(q):
 
 def test_privacy_guard_allows_own_questions():
     assert not is_private_request("what is my GPA requirement for the thesis")
+
+
+def test_tokenize_stemming_and_safeguards():
+    from assistant_core.rag.index import tokenize
+
+    # Plural stripping
+    assert tokenize("credits") == ["credit"]
+    assert tokenize("books") == ["book"]
+    assert tokenize("students") == ["student"]
+    assert tokenize("courses") == ["course"]
+
+    # Safeguards: non-plural words ending in 'ss', 'us', 'is' must remain intact
+    assert tokenize("status") == ["status"]
+    assert tokenize("business") == ["business"]
+    assert tokenize("thesis") == ["thesis"]
+    assert tokenize("crisis") == ["crisis"]
+    assert tokenize("pass") == ["pass"]
+    assert tokenize("class") == ["class"]
