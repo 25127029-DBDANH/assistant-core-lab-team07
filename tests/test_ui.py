@@ -1,7 +1,6 @@
 from pathlib import Path
 
 import httpx
-import pytest
 
 from ui.api_client import AssistantClient, ChatResult
 from ui.logic import format_sources, status_note, validate_input
@@ -91,13 +90,35 @@ def test_validate_input():
     assert validate_input("hello") is None
 
 
-@pytest.mark.xfail(reason="TODO L1: format_sources chưa triển khai trên starter")
+# ── L1: format_sources (implemented in Issue #70) ────────────────────────────
 def test_format_sources():
     assert format_sources([]) == ""
-    assert format_sources(OK["sources"]) == "Sources: S26#1 — 1 Library borrowing"
+    assert format_sources(OK["sources"]) == "Sources: S26#1 \u2014 1 Library borrowing"
 
 
-@pytest.mark.xfail(reason="TODO L2: status_note chưa triển khai trên starter")
+def test_format_sources_multiple():
+    sources = [
+        {"id": "H26#5.3", "title": "5.3 Thesis registration"},
+        {"id": "H26#6.1", "title": "6.1 Credit load"},
+    ]
+    result = format_sources(sources)
+    assert result.startswith("Sources: ")
+    assert "H26#5.3" in result
+    assert "H26#6.1" in result
+    assert "; " in result  # multiple sources separated by semicolon
+
+
+# ── L2: status_note (implemented in Issue #70) ───────────────────────────────
 def test_status_note():
     assert "Training Office" in status_note(ChatResult(ok=True, escalate=True))
     assert status_note(ChatResult(ok=True)) is None
+
+
+def test_status_note_degraded():
+    note = status_note(ChatResult(ok=True, degraded=True))
+    assert note is not None
+    assert "source document" in note
+
+
+def test_status_note_normal():
+    assert status_note(ChatResult(ok=True, escalate=False, degraded=False)) is None
