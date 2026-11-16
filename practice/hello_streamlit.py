@@ -6,6 +6,7 @@ Tests: pytest -q test_hello_streamlit.py
 Streamlit re-runs this whole file from top to bottom every time the user clicks or types.
 Anything you want to REMEMBER between runs must go into st.session_state.
 """
+
 import streamlit as st
 
 st.title("Hello, Streamlit 👋")

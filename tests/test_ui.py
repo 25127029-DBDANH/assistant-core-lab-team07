@@ -1,10 +1,18 @@
 import httpx
+import pytest
 
 from ui.api_client import AssistantClient, ChatResult
 from ui.logic import format_sources, status_note, validate_input
 
-OK = {"answer": "Room B.201", "intent": "office", "sources": [{"id": "S26#1", "title": "1 Library borrowing"}],
-      "degraded": False, "escalate": False, "path": "deterministic", "request_id": "abc123"}
+OK = {
+    "answer": "Room B.201",
+    "intent": "office",
+    "sources": [{"id": "S26#1", "title": "1 Library borrowing"}],
+    "degraded": False,
+    "escalate": False,
+    "path": "deterministic",
+    "request_id": "abc123",
+}
 
 
 def client_with(handler) -> AssistantClient:
@@ -19,6 +27,7 @@ def test_ask_ok():
 def test_ask_backend_down():
     def boom(req):
         raise httpx.ConnectError("refused", request=req)
+
     r = client_with(boom).ask("hi", "s1")
     assert not r.ok and "backend" in r.error
 
@@ -38,11 +47,13 @@ def test_validate_input():
     assert validate_input("hello") is None
 
 
+@pytest.mark.xfail(reason="TODO L1: format_sources chưa triển khai trên starter")
 def test_format_sources():
     assert format_sources([]) == ""
     assert format_sources(OK["sources"]) == "Sources: S26#1 — 1 Library borrowing"
 
 
+@pytest.mark.xfail(reason="TODO L2: status_note chưa triển khai trên starter")
 def test_status_note():
     assert "Training Office" in status_note(ChatResult(ok=True, escalate=True))
     assert status_note(ChatResult(ok=True)) is None
