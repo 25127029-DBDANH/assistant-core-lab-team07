@@ -6,6 +6,7 @@ Dự án Study Assistant - Môn CSC10014 (Practical Track).
 * **Lab 4:** Chuyển đổi Study Assistant thành dịch vụ Web API qua HTTP bằng **FastAPI**, JSON, bảo mật API Key, gọi dịch vụ bên ngoài và kiểm thử tự động.
 * **Lab 5:** Tích hợp cơ sở dữ liệu **SQLite** qua **SQLModel**, lưu trữ bền vững lịch sử tương tác (`Interaction`) và phản hồi (`Feedback`), bảo vệ quyền riêng tư người dùng.
 * **Lab 6:** Tích hợp trí tuệ nhân tạo an toàn (**Safe RAG**) với bộ tìm kiếm BM25, mô hình ngôn ngữ có kiểm định trích dẫn nguồn (**Grounding Check**), cơ chế từ chối khi không chắc chắn (**Abstain / "I Don't Know"**) và bộ tiêu chuẩn đo lường Benchmark 3 đường dẫn.
+* **Lab 7:** Xây dựng Giao diện Người dùng Web (**Streamlit UI**) thuần Python, kết nối Web API qua HTTP, xử lý các trạng thái lỗi và chuyển tiếp lịch thiệp (**Escalation**), thu thập phản hồi 👍/👎 và thử nghiệm Usability thực tế với người dùng bên ngoài.
 
 ---
 
@@ -41,31 +42,55 @@ python scripts/migrate.py assistant.db
 python scripts/seed.py assistant.db 300
 ```
 
-### 3. Khởi chạy Web Server
+### 3. Khởi chạy Ứng dụng (2 Servers, 2 Terminals)
 
-Chạy server FastAPI ở chế độ reload tự động:
-```bash
-uvicorn assistant_api.main:create_app --factory --reload
-```
+Hệ thống yêu cầu khởi chạy đồng thời cả Backend API và Giao diện Web:
 
-* Truy cập trang kiểm tra: `http://127.0.0.1:8000/`
-* Mở trang tài liệu tương tác Swagger UI: `http://127.0.0.1:8000/docs`
+* **Terminal 1 — Khởi chạy Backend API:**
+  ```bash
+  uvicorn assistant_api.main:create_app --factory --reload
+  ```
+  *(API chạy tại: `http://127.0.0.1:8000/`, Swagger UI: `http://127.0.0.1:8000/docs`)*
+
+* **Terminal 2 — Khởi chạy Streamlit Web UI:**
+  ```bash
+  streamlit run ui/app.py
+  ```
+  *(Giao diện mở tự động trên trình duyệt tại: `http://localhost:8501`)*
 
 ### 4. Kiểm thử tự động
 
 ```bash
-# Chạy toàn bộ unit test của trợ lý
+# Chạy toàn bộ unit test của trợ lý (bao gồm API, DB, RAG và UI)
 pytest -q
 
-# Kiểm tra bài tập thực hành SQL trên school.db (Q1-Q15)
-cd practice && python check.py && cd ..
+# Chạy riêng bộ kiểm thử giao diện Web
+pytest -q tests/test_ui.py
 
-# Chạy unit test phần Python Database (D1-D3)
-pytest -q practice/test_school_repo.py
+# Chạy bộ kiểm thử bài tập Streamlit cơ bản (U1-U4)
+pytest -q practice/test_hello_streamlit.py
 
 # Kiểm tra định dạng và chất lượng code
 ruff check .
+ruff format --check .
 ```
+
+---
+
+## 👥 Phân chia công việc Lab 7: A User Interface for the Assistant (Nhóm 7 thành viên)
+
+> [!IMPORTANT]
+> Trọng tâm Lab 7 là đưa Trợ lý vào môi trường tương tác thực tế với người dùng qua **Streamlit Web UI**, tuân thủ 4 nguyên tắc thiết kế AI (Google PAIR Guidebook): minh bạch khả năng, hiển thị nguồn trích dẫn (**Task L1**), xử lý lỗi và chuyển tiếp con người lịch thiệp (**Task L2**), thu thập phản hồi tiêu cực (**Task F1**), hoàn thiện Usability Checklist, thử nghiệm người dùng thực tế (**H1**) và điểm thưởng Bonus (**Streaming / Nicer Sources**). Mỗi thành viên checkout nhánh riêng theo mã issue, hoàn thành task, mở PR và pass 100% CI để Tech Lead review và merge.
+
+| Issue | Đầu việc (Task) | Mô tả chi tiết phần việc cần làm | File liên quan | Người phụ trách (Assignee) |
+| :---: | :--- | :--- | :--- | :---: |
+| **[#64](https://github.com/25127029-DBDANH/assistant-core-lab-team07/issues/64)** | **Part D — Task F1: Nút Đánh giá Tiêu cực 👎 & Quản lý Session State** | Triển khai nút `👎` tại cột `c2` trong `ui/app.py`: gửi feedback rating `-1` tới API backend qua `client.send_feedback(rid, -1)`, ghi nhận `rid` vào `st.session_state.rated` để ẩn nút sau khi vote, và hiển thị thông báo toast `"Thanks — we will look at this answer."`. Phụ trách review PR, cập nhật `README.md` hướng dẫn chạy 2 server, đóng milestone và gắn tag phát hành `v0.7-mvp`. | `ui/app.py`<br>`README.md` | **Danh (Leader)** (`@25127029-DBDANH`) |
+| **[#65](https://github.com/25127029-DBDANH/assistant-core-lab-team07/issues/65)** | **Part B — Task U1 & U2: Nhập liệu Tương tác & Phản hồi Lời chào (Streamlit Basics)** | Hoàn thiện Task U2 trong `practice/hello_streamlit.py`: tiếp nhận chuỗi tên từ `st.text_input("Your name")`, kiểm tra nếu `name` không rỗng thì hiển thị lời chào màu xanh `st.success(f"Hello, {name}!")`. Bổ sung test cases kiểm tra chuỗi rỗng và ký tự đặc biệt, pass 100% test `test_u1_title` và `test_u2_greeting` trong `practice/test_hello_streamlit.py`. | `practice/hello_streamlit.py`<br>`practice/test_hello_streamlit.py` | **Khang** (`@ankhang-maker`) |
+| **[#66](https://github.com/25127029-DBDANH/assistant-core-lab-team07/issues/66)** | **Part B — Task U3 & U4: Quản lý State Bộ Đếm & Xác thực Ràng buộc Tín chỉ** | Hoàn thiện Task U3 & U4 trong `practice/hello_streamlit.py`: duy trì bộ đếm qua `st.session_state.count`, tăng đếm khi nhấn nút `Click me`; xác thực input tín chỉ qua `st.number_input(...)`, hiển thị `st.error` nếu $>30$ tín chỉ và `st.info` nếu bình thường. Làm xanh 100% bộ test `practice/test_hello_streamlit.py` (4/4 passed). | `practice/hello_streamlit.py`<br>`practice/test_hello_streamlit.py` | **Đăng** (`@dhdang2523-coder`) |
+| **[#67](https://github.com/25127029-DBDANH/assistant-core-lab-team07/issues/67)** | **Part D — Task L1 & L2: Định dạng Nguồn Trích dẫn & Chỉ báo Escalation (UI Logic)** | Triển khai hàm `format_sources(sources)` (Task L1) ghép chuỗi trích dẫn nguồn quy chế và `status_note(result)` (Task L2) xử lý thông điệp chuyển tiếp Phòng Đào tạo I.101 (`escalate`) hoặc thông báo fallback tài liệu gốc (`degraded`) trong `ui/logic.py`. Gỡ bỏ nhãn `xfail` trên 2 test trong `tests/test_ui.py`, đảm bảo pass 100% test suite `test_ui.py` (7/7 passed). | `ui/logic.py`<br>`tests/test_ui.py` | **Hạo** (`@DMH554`) |
+| **[#68](https://github.com/25127029-DBDANH/assistant-core-lab-team07/issues/68)** | **Part E & D.4: Kiểm chứng 6 Trạng thái UI & Hoàn thiện Usability Checklist** | Khởi chạy song song 2 server, kiểm chứng thực tế 6 trạng thái giao diện theo Bảng D.4 (câu hỏi mẫu sidebar, hỏi quy chế, câu hỏi ngoài phạm vi, input rỗng, vote nút, lỗi sập backend). Kiểm tra hiển thị responsive trên kích thước điện thoại (`phone-width`), tích hoàn thành 10 tiêu chí trong `worksheets/usability_checklist.md` và lập báo cáo minh chứng tại `docs/lab7/ui_states_report.md`. | `worksheets/usability_checklist.md`<br>`docs/lab7/ui_states_report.md` | **Lam** (`@LamNotNam1607`) |
+| **[#69](https://github.com/25127029-DBDANH/assistant-core-lab-team07/issues/69)** | **Homework H1: Thử nghiệm Người dùng Thực tế (10-minute Usability Test) & Sửa lỗi UI** | Tiến hành thử nghiệm 10 phút với 1 người dùng ngoài nhóm theo 2 nhiệm vụ (điều kiện khóa luận 118 tín chỉ và nơi đổi thẻ sinh viên bị mất). Quan sát độc lập, ghi nhận 3 sự hiểu lầm/trở ngại vào `worksheets/user_test_observations.md`. Chọn 1 vấn đề để sửa trực tiếp trong mã nguồn UI, commit kèm ảnh chụp so sánh trước/sau khi sửa (before/after screenshot). | `worksheets/user_test_observations.md`<br>`ui/app.py` hoặc `ui/logic.py` | **Hưng** (`@pghung2516-netizen`) |
+| **[#70](https://github.com/25127029-DBDANH/assistant-core-lab-team07/issues/70)** | **Homework H2 & Bonus: Phản tư Google PAIR & Điểm thưởng Giao diện Nâng cao** | Đọc tài liệu Google PAIR Guidebook (*Feedback + Control*, *Errors + Graceful Failure*), viết đoạn văn phản tư H2 gồm đúng 2 câu lưu vào `docs/lab7/reflection.md`. Triển khai tính năng thưởng Bonus (+1.0 đ) trong `ui/app.py`: hiệu ứng gõ chữ (Streaming animation) bằng `st.write_stream` HOẶC nâng cấp trích dẫn nguồn bằng thẻ collapsible card (`st.expander`). | `docs/lab7/reflection.md`<br>`ui/app.py` | **Đạt** (`@EddieOuttaHere`) |
 
 ---
 
