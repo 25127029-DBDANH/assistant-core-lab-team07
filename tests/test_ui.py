@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import httpx
 import pytest
 
@@ -39,6 +41,48 @@ def test_ask_validation_and_server_errors():
 
 def test_feedback():
     assert client_with(lambda req: httpx.Response(201, json={})).send_feedback("abc123", 1)
+
+
+def test_negative_feedback():
+    recorded = []
+
+    def handle(req):
+        recorded.append(httpx.Response(201, json={"status": "ok"}))
+        return recorded[-1]
+
+    client = client_with(handle)
+    assert client.send_feedback("req_f1_test", -1)
+
+
+def test_ui_negative_feedback_button(monkeypatch):
+    from streamlit.testing.v1 import AppTest
+
+    recorded = []
+    monkeypatch.setattr(
+        AssistantClient, "send_feedback", lambda self, rid, rating: recorded.append((rid, rating)) or True
+    )
+    monkeypatch.setattr(AssistantClient, "healthy", lambda self: True)
+
+    app_file = Path(__file__).resolve().parents[1] / "ui" / "app.py"
+    at = AppTest.from_file(str(app_file))
+    at.run()
+    at.session_state.messages.append(
+        {
+            "role": "assistant",
+            "content": "Test answer",
+            "request_id": "test_req_f1",
+        }
+    )
+    at.run()
+
+    down = [b for b in at.button if b.label == "👎"]
+    assert len(down) == 1
+    down[0].click().run()
+
+    assert recorded == [("test_req_f1", -1)]
+    assert "test_req_f1" in at.session_state.rated
+    at.run()
+    assert len([b for b in at.button if b.label in ("👍", "👎")]) == 0
 
 
 def test_validate_input():
