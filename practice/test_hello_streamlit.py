@@ -15,6 +15,20 @@ def test_u2_greeting():
     assert at.success[0].value == "Hello, Lan!"
 
 
+def test_u2_empty_name_no_greeting():
+    """U2: empty name should not produce any success message."""
+    at = app()
+    at.text_input[0].input("").run()
+    assert len(at.success) == 0
+
+
+def test_u2_special_characters():
+    """U2: special characters in name should be greeted correctly."""
+    at = app()
+    at.text_input[0].input("Nguyễn Văn A!@#").run()
+    assert at.success[0].value == "Hello, Nguyễn Văn A!@#!"
+
+
 def test_u3_counter_survives_reruns():
     at = app()
     at.button[0].click().run()
