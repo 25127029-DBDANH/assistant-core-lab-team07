@@ -1,7 +1,6 @@
 from pathlib import Path
 
 import httpx
-import pytest
 
 from ui.api_client import AssistantClient, ChatResult
 from ui.logic import format_sources, status_note, validate_input
@@ -91,13 +90,11 @@ def test_validate_input():
     assert validate_input("hello") is None
 
 
-@pytest.mark.xfail(reason="TODO L1: format_sources chưa triển khai trên starter")
 def test_format_sources():
     assert format_sources([]) == ""
     assert format_sources(OK["sources"]) == "Sources: S26#1 — 1 Library borrowing"
 
 
-@pytest.mark.xfail(reason="TODO L2: status_note chưa triển khai trên starter")
 def test_status_note():
     assert "Training Office" in status_note(ChatResult(ok=True, escalate=True))
     assert status_note(ChatResult(ok=True)) is None
