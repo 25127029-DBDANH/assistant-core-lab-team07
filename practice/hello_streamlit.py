@@ -16,7 +16,8 @@ st.write("This page is written in Python only — no HTML needed.")
 
 # U2: a text input and a greeting
 name = st.text_input("Your name")
-# TODO U2: if name is not empty, show  st.success(f"Hello, {name}!")
+if name:
+    st.success(f"Hello, {name}!")
 
 # U3: a button and a counter that survives reruns
 if "count" not in st.session_state:
