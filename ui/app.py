@@ -138,6 +138,14 @@ if not client.healthy():
 # Sidebar
 # ---------------------------------------------------------------------------
 with st.sidebar:
+    if st.button("🔄 New conversation", use_container_width=True, help="Clear chat history and start a fresh session"):
+        st.session_state.session_id = uuid.uuid4().hex[:12]
+        st.session_state.messages = [{"role": "assistant", "content": WELCOME}]
+        st.session_state.rated = set()
+        st.session_state.pop("pending", None)
+        st.rerun()
+
+    st.divider()
     st.subheader("💡 Try an example")
     for ex in EXAMPLES:
         if st.button(ex, use_container_width=True):
@@ -158,7 +166,9 @@ for i, msg in enumerate(st.session_state.messages):
 # ---------------------------------------------------------------------------
 # New question
 # ---------------------------------------------------------------------------
-question = st.chat_input("Ask about fees, offices or the handbook…") or st.session_state.pop("pending", None)
+question = st.chat_input(
+    "Ask a question (e.g., thesis registration, lost student card, fees)..."
+) or st.session_state.pop("pending", None)
 
 if question:
     problem = validate_input(question)
