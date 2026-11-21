@@ -6,7 +6,7 @@ from ui.api_client import ChatResult
 
 WELCOME = (
     "Hi! I can answer questions about fees, offices and the student handbook. "
-    "Try: “Can I register my thesis with 118 credits?”"
+    "Try: \u201cCan I register my thesis with 118 credits?\u201d"
 )
 EXAMPLES = [
     "Can I register my thesis with 118 credits?",
@@ -27,16 +27,28 @@ def validate_input(text: str) -> str | None:
 
 
 def format_sources(sources: list[dict]) -> str:
-    """L1: Return 'Sources: id — title; ...' for each source, or '' if none."""
+    """'Sources: H26#5.3 \u2014 5.3 Thesis registration' or '' if none.
+
+    Each source dict has keys 'id' and 'title' (from the API schema).
+    Returns an empty string when sources is empty so the caller can do
+    ``if formatted_sources:`` without special-casing.
+    """
     if not sources:
         return ""
     return "Sources: " + "; ".join(f"{s['id']} \u2014 {s['title']}" for s in sources)
 
 
 def status_note(result: ChatResult) -> str | None:
-    """L2: Return a short explanatory note for escalated or degraded results, else None."""
+    """A short note shown under the answer, explaining special situations.
+
+    Returns:
+        str  \u2014 a human-readable note when the answer needs extra context.
+        None \u2014 when the answer is a plain, confident response.
+    """
     if result.escalate:
-        return "I could not find this in the official documents. A staff member can help: Training Office, room I.101."
+        return (
+            "I could not find this in the official documents. " "A staff member can help: Training Office, room I.101."
+        )
     if result.degraded:
         return "Shown directly from the source document (the AI helper was unavailable)."
     return None
