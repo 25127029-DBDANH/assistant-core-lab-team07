@@ -1,26 +1,26 @@
 # Báo cáo kiểm tra trạng thái giao diện — Lab 7 (Issue #68)
 
-**Ngày kiểm tra:** 17/11/2026  
-**Phạm vi:** Chạy test tự động trên nhánh `main`, đọc mã nguồn và đối chiếu sáu trạng thái trong D.4. Chưa kiểm thử end-to-end sáu luồng trên trình duyệt.
+**Ngày kiểm tra ban đầu:** 17/11/2026  
+**Ngày cập nhật xác minh sau tích hợp toàn bộ PR (#64–#70):** 22/11/2026  
+**Phạm vi:** Kiểm thử tự động toàn bộ test suite (`pytest -q`), kiểm thử end-to-end 6 trạng thái D.4 qua FastAPI backend thật (`create_app`) + `AssistantClient` + Streamlit UI (`ui/app.py`), và đối chiếu trực quan qua ảnh chụp màn hình (`docs/lab7/screenshots/after_fix.png`).
 
-## Kết quả đối chiếu sáu trạng thái
+## Kết quả đối chiếu sáu trạng thái (Bảng D.4)
 
-| # | Trạng thái cần kiểm tra | Kết quả trên mã nguồn `main` | Nhận xét |
+| # | Trạng thái cần kiểm tra | Kết quả trên nhánh `main` | Chi tiết xác minh |
 |---|---|---|---|
-| 1 | Chọn câu hỏi mẫu ở sidebar | Có xử lý | Nút mẫu lưu câu hỏi vào session state; phần gửi câu hỏi chạy qua luồng chat chung. Chưa chạy tương tác trên trình duyệt. |
-| 2 | Hỏi quy chế và thấy nguồn `H26#5.3` | Chưa đạt | `format_sources` trong `ui/logic.py` vẫn là TODO và ném `NotImplementedError`; test tương ứng đang được đánh dấu `xfail`. Logic này thuộc issue #67. |
-| 3 | Hỏi ngoài phạm vi và thấy escalation tới I.101 | Chưa đạt | `status_note` vẫn là TODO và ném `NotImplementedError`; test tương ứng đang được đánh dấu `xfail`. Logic này thuộc issue #67. |
-| 4 | Gửi ô chat rỗng | Có xử lý | `validate_input` trả thông báo thân thiện; luồng UI chỉ gọi API khi nội dung hợp lệ. Chưa xác nhận request bằng runtime. |
-| 5 | Bấm 👍 / 👎, thấy cảm ơn và ẩn nút | Test UI đạt | AppTest xác nhận nút 👎 gửi rating -1, lưu request đã vote và ẩn cả hai nút đánh giá. |
-| 6 | Backend ngừng hoạt động | Có xử lý trong mã | Client bắt lỗi kết nối và trả thông báo `Cannot reach the assistant...`; UI hiển thị lỗi thay cho việc dừng trang. Chưa tắt backend để kiểm thử runtime. |
+| 1 | Chọn câu hỏi mẫu ở sidebar | **Đạt (PASS)** | Nút ví dụ ở sidebar (`EXAMPLES`) gán câu hỏi vào `st.session_state.pending` và tự động gửi qua luồng chat; kèm nút `🔄 New conversation` để reset phiên. |
+| 2 | Hỏi quy chế và thấy nguồn `H26#5.3` | **Đạt (PASS)** | Hỏi `"Can I register my thesis with 118 credits?"` trả về nguồn `H26#5.3 — 5.3 Thesis registration` qua `format_sources` (L1) và thẻ gập mở `st.expander` (Bonus). |
+| 3 | Hỏi ngoài phạm vi và thấy escalation tới I.101 | **Đạt (PASS)** | Hỏi `"what is the capital of France"` trả về `escalate=True`; `status_note` (L2) hiển thị hộp `st.info` hướng dẫn liên hệ `Training Office, room I.101`. |
+| 4 | Gửi ô chat rỗng | **Đạt (PASS)** | `st.chat_input` chặn gửi chuỗi rỗng trên trình duyệt; `validate_input` trả về `"Please type a question."` trước khi gọi API. |
+| 5 | Bấm 👍 / 👎, thấy cảm ơn và ẩn nút | **Đạt (PASS)** | Cả nút 👍 (`rating=+1`) và 👎 (`rating=-1`) gửi thành công HTTP `201 Created` tới `/v1/feedback`, hiển thị `st.toast`, lưu `request_id` vào `st.session_state.rated` và ẩn cặp nút. |
+| 6 | Backend ngừng hoạt động | **Đạt (PASS)** | Khi backend không chạy, `client.healthy()` hiển thị `st.error` ở đầu trang; gửi câu hỏi trả về `"Cannot reach the assistant. Is the backend running?"` thay vì crash. |
 
-## Giới hạn kiểm thử
+## Kết quả kiểm thử tự động sau tích hợp
 
-- Đã chạy `pytest -q tests/test_ui.py` với Python 3.12 và dependency của repo: **7 passed, 2 xfailed**. Hai ca xfail là kiểm thử nguồn trích dẫn và escalation; hai hàm tương ứng vẫn là TODO trên `main` (issue #67).
-- Đã chạy toàn bộ `pytest -q`: **76 passed, 2 xfailed** trong 5.45 giây. Cần chạy test trong môi trường có quyền tạo socket cục bộ vì lượt chạy giới hạn bị treo ở `asyncio` socketpair của FastAPI `TestClient`.
-- Chưa thể xác nhận kết quả trực quan, tương phản hoặc bố cục ở `phone-width` từ việc đọc mã nguồn.
-- Nhánh `main` hiện còn hai TODO của issue #67, nên không thể đánh dấu checklist hoàn tất hoặc xác nhận trạng thái 2 và 3 đạt.
-- Cần tích hợp issue #67, rồi chạy lại sáu kịch bản trên ứng dụng và kiểm tra giao diện ở kích thước điện thoại. Các mục chưa được kiểm chứng được giữ trống trong checklist.
+- `pytest -q`: **82 passed, 0 failed** (gồm 13/13 tests trong `tests/test_ui.py`).
+- `pytest -q practice/test_hello_streamlit.py`: **6 passed, 0 failed** (U1–U4 + 2 edge cases).
+- `ruff check .` & `ruff format --check .`: **100% clean**.
+- `worksheets/usability_checklist.md`: **10/10 mục đã hoàn thành `[x]`**.
 
 ## Tệp đã đối chiếu
 
@@ -29,3 +29,4 @@
 - `ui/logic.py`
 - `tests/test_ui.py`
 - `worksheets/usability_checklist.md`
+- `docs/lab7/screenshots/after_fix.png`
