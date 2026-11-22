@@ -84,6 +84,38 @@ def test_ui_negative_feedback_button(monkeypatch):
     assert len([b for b in at.button if b.label in ("👍", "👎")]) == 0
 
 
+def test_ui_new_conversation_button(monkeypatch):
+    from streamlit.testing.v1 import AppTest
+
+    from ui.logic import WELCOME
+
+    monkeypatch.setattr(AssistantClient, "healthy", lambda self: True)
+
+    app_file = Path(__file__).resolve().parents[1] / "ui" / "app.py"
+    at = AppTest.from_file(str(app_file))
+    at.run()
+
+    # Verify New conversation button exists in sidebar
+    new_chat_btn = [b for b in at.sidebar.button if "New conversation" in b.label]
+    assert len(new_chat_btn) == 1
+
+    old_session_id = at.session_state.session_id
+    at.session_state.messages.append({"role": "user", "content": "Question 1"})
+    at.session_state.messages.append({"role": "assistant", "content": "Answer 1", "request_id": "r1"})
+    at.session_state.rated.add("r1")
+    at.session_state.pending = "Some pending"
+
+    # Click New conversation button
+    new_chat_btn[0].click().run()
+
+    # Verify session state was reset
+    assert at.session_state.session_id != old_session_id
+    assert len(at.session_state.messages) == 1
+    assert at.session_state.messages[0]["content"] == WELCOME
+    assert len(at.session_state.rated) == 0
+    assert "pending" not in at.session_state
+
+
 def test_validate_input():
     assert validate_input("   ") == "Please type a question."
     assert validate_input("x" * 2001).startswith("Your question is too long")
