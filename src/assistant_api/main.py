@@ -34,6 +34,7 @@ def create_app(
     service: AssistantService | None = None,
     weather: WeatherClient | None = None,
     holiday: HolidayClient | None = None,
+    repo: Repository | None = None,
 ) -> FastAPI:
     settings = settings or load_settings()
     service = service or build_service(settings)
@@ -42,9 +43,12 @@ def create_app(
     )
     holiday = holiday or HolidayClient()
     limiter = RateLimiter(settings.rate_limit_per_min)  # used only in the BONUS task
-    engine = make_engine(settings.database_url)
-    init_db(engine)
-    repo = Repository(engine, settings.session_salt)
+    if repo is None:
+        engine = make_engine(settings.database_url)
+        init_db(engine)
+        repo = Repository(engine, settings.session_salt)
+    else:
+        engine = repo.engine
 
     @asynccontextmanager
     async def lifespan(_: FastAPI):
