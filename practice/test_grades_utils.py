@@ -30,4 +30,6 @@ def test_bug2_top_n_returns_n():
     scores = {"An": 9, "Binh": 7, "Chi": 8, "Dung": 6}
     assert len(top_n(scores, 3)) == 3
     assert top_n(scores, 1) == ["An"]
+
+
 # def test_bug3_add_grade_new_book_each_time(): ...
