@@ -7,6 +7,7 @@ Dự án Study Assistant - Môn CSC10014 (Practical Track).
 * **Lab 5:** Tích hợp cơ sở dữ liệu **SQLite** qua **SQLModel**, lưu trữ bền vững lịch sử tương tác (`Interaction`) và phản hồi (`Feedback`), bảo vệ quyền riêng tư người dùng.
 * **Lab 6:** Tích hợp trí tuệ nhân tạo an toàn (**Safe RAG**) với bộ tìm kiếm BM25, mô hình ngôn ngữ có kiểm định trích dẫn nguồn (**Grounding Check**), cơ chế từ chối khi không chắc chắn (**Abstain / "I Don't Know"**) và bộ tiêu chuẩn đo lường Benchmark 3 đường dẫn.
 * **Lab 7:** Xây dựng Giao diện Người dùng Web (**Streamlit UI**) thuần Python, kết nối Web API qua HTTP, xử lý các trạng thái lỗi và chuyển tiếp lịch thiệp (**Escalation**), thu thập phản hồi 👍/👎 và thử nghiệm Usability thực tế với người dùng bên ngoài.
+* **Lab 8:** Kiểm thử hồi quy (**Regression Tests**) từ báo cáo lỗi thực tế, sử dụng VS Code Debugger và JSON logs, bảo vệ bí mật (**Secrets**), phòng thủ tấn công **Prompt Injection (G1)**, trao đổi kịch bản **Red-Team** với nhóm bạn và tổng hợp danh mục sự cố ($\ge 3$ Mitigations).
 
 ---
 
@@ -70,10 +71,33 @@ pytest -q tests/test_ui.py
 # Chạy bộ kiểm thử bài tập Streamlit cơ bản (U1-U4)
 pytest -q practice/test_hello_streamlit.py
 
+# Chạy bộ kiểm thử bảo mật, hồi quy & Red-Team (Lab 8)
+pytest -q tests/test_security.py
+pytest -q tests/test_my_regressions.py
+pytest -q practice/test_grades_utils.py
+python redteam/run_redteam.py
+
 # Kiểm tra định dạng và chất lượng code
 ruff check .
 ruff format --check .
 ```
+
+---
+
+## 👥 Phân chia công việc Lab 8: Testing, Debugging & Red Teaming (Nhóm 7 thành viên)
+
+> [!IMPORTANT]
+> Trọng tâm Lab 8 là xây dựng **lưới an toàn (safety net)** cho toàn bộ trợ lý: sửa 3 seeded bugs với regression test, gỡ lỗi bằng Debugger & JSON logs, triển khai **Prompt Injection Guard (G1 — 12/12)**, viết $\ge 3$ regression tests cho các lỗi từ Tuần 7, trao đổi **Red-Team Exchange**, lập **Failure Catalogue ($\ge 3$ Mitigations đã kiểm thử)**, kiểm chứng hàm AI (**H1**), phản tư OWASP (**H2**) và điểm thưởng Bonus. Mỗi thành viên checkout nhánh riêng theo mã issue, hoàn thành task, mở PR và pass 100% CI để Tech Lead review và merge.
+
+| Issue | Đầu việc (Task) | Mô tả chi tiết phần việc cần làm | File liên quan | Người phụ trách (Assignee) |
+| :---: | :--- | :--- | :--- | :---: |
+| **[#78](https://github.com/25127029-DBDANH/assistant-core-lab-team07/issues/78)** | **Part D — Task G1: Prompt Injection Guard (12/12), Tích hợp CI & Tag `v0.8-tested`** | Bổ sung 2 regex còn thiếu vào `INJECTION_PATTERNS` trong `src/assistant_core/guard.py` (`reveal/show/print/repeat...` và `\byou are now\b`), gỡ `xfail` trong `tests/test_security.py`, đạt **12/12 passed** với `python redteam/run_redteam.py`. Cập nhật `.github/workflows/ci.yml` chạy thêm `run_redteam.py` trên mỗi PR, điều phối review/merge và gắn tag `v0.8-tested`. | `src/assistant_core/guard.py`<br>`tests/test_security.py`<br>`.github/workflows/ci.yml` | **Danh (Leader)** (`@25127029-DBDANH`) |
+| **[#79](https://github.com/25127029-DBDANH/assistant-core-lab-team07/issues/79)** | **Part B — Sửa Seeded Bugs (BUG-1 & BUG-2) kèm Regression Tests** | Áp dụng quy trình 4 bước (Reproduce $\rightarrow$ Failing Test $\rightarrow$ Fix $\rightarrow$ Keep Regression Test) cho BUG-1 (`average([])` crash `ZeroDivisionError`) và BUG-2 (`top_n` slice `ranked[:n - 1]` trả thiếu sinh viên). Viết 2 regression tests tương ứng trong `practice/test_grades_utils.py`. | `practice/grades_utils.py`<br>`practice/test_grades_utils.py` | **Khang** (`@ankhang-maker`) |
+| **[#80](https://github.com/25127029-DBDANH/assistant-core-lab-team07/issues/80)** | **Part B (BUG-3) & Part C: Sửa Mutable Default & Bug Report BUG-7** | Khắc phục lỗi mutable default `book={}` trong `add_grade` thành `book=None`, viết regression test chứng minh các lớp độc lập và hoàn thiện đủ **7/7 passing tests** cho `practice/test_grades_utils.py`. Tái hiện và lập báo cáo lỗi chuẩn cho **BUG-7** (*"two retakes"*) theo mẫu `worksheets/bug_report_template.md` vào `docs/lab8/bug_reports/BUG-7.md`. | `practice/grades_utils.py`<br>`practice/test_grades_utils.py`<br>`docs/lab8/bug_reports/BUG-7.md` | **Đăng** (`@dhdang2523-coder`) |
+| **[#81](https://github.com/25127029-DBDANH/assistant-core-lab-team07/issues/81)** | **Part E — $\ge 3$ Regression Tests Tuần 7 & Mitigation #2 (BUG-7)** | Triển khai bản vá Mitigation #2 trong `src/assistant_core/tools.py` xử lý số viết bằng chữ tiếng Anh (`"one"`–`"ten"`, khắc phục BUG-7 `"two retakes"`). Viết tối thiểu **3 regression tests** chuẩn hành vi trong `tests/test_my_regressions.py` cho BUG-7 và các quan sát Usability Lab 7. | `tests/test_my_regressions.py`<br>`src/assistant_core/tools.py` | **Hạo** (`@DMH554`) |
+| **[#82](https://github.com/25127029-DBDANH/assistant-core-lab-team07/issues/82)** | **Part F (F.2 & F.3) — Kịch bản Tấn công Red-Team & Báo cáo `redteam/report.md`** | Thiết kế **8–10 attack cases** phủ đủ 6 nhóm tấn công + 1–2 control cases trong `redteam/cases_for_partner.jsonl`. Chạy `python redteam/run_redteam.py` trên bộ test chuẩn và bộ test trao đổi từ nhóm bạn, lưu đầy đủ bảng kết quả vào `redteam/report.md`. | `redteam/cases_for_partner.jsonl`<br>`redteam/report.md` | **Lam** (`@LamNotNam1607`) |
+| **[#83](https://github.com/25127029-DBDANH/assistant-core-lab-team07/issues/83)** | **Part E & F.4 — Red-Team Exchange & Failure Catalogue ($\ge 3$ Mitigations)** | Hoàn thiện bảng debrief mọi ca FAIL vào `worksheets/redteam_exchange.md` và danh mục sự cố `worksheets/failure_catalogue.md` tổng hợp đủ $\ge 3$ mitigations đã triển khai, kiểm thử kèm tên test tương ứng. | `worksheets/redteam_exchange.md`<br>`worksheets/failure_catalogue.md` | **Hưng** (`@pghung2516-netizen`) |
+| **[#84](https://github.com/25127029-DBDANH/assistant-core-lab-team07/issues/84)** | **Homework H1, H2 & Bonus (+1.0đ Mitigation)** | H1: Chọn 1 hàm AI tạo từ các tuần trước, viết $\ge 5$ edge tests trong `tests/test_ai_proven.py` (rỗng, 0, số lớn, tiếng Việt, sai kiểu), sửa nếu fail và ghi `docs/ai-use-log.md`. H2: Viết 2 câu phản tư OWASP vào `docs/lab8/reflection.md`. Bonus: Triển khai thêm 1 mitigation mới cho phát hiện Red-Team kèm regression test. | `tests/test_ai_proven.py`<br>`docs/ai-use-log.md`<br>`docs/lab8/reflection.md`<br>`src/assistant_core/guard.py` | **Đạt** (`@EddieOuttaHere`) |
 
 ---
 
