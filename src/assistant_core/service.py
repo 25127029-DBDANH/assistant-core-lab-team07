@@ -8,7 +8,13 @@ from pathlib import Path
 
 from assistant_core.config import Settings
 from assistant_core.errors import ConfigError, DataError, InvalidRequest, ProviderError
-from assistant_core.guard import INJECTION_REPLY, PRIVATE_REPLY, is_private_request, looks_like_injection
+from assistant_core.guard import (
+    INJECTION_REPLY,
+    PRIVATE_REPLY,
+    is_private_request,
+    looks_like_injection,
+    looks_like_viet_impersonation,
+)
 from assistant_core.knowledge import Handbook, OfficeDirectory
 from assistant_core.llm import make_llm
 from assistant_core.models import Intent, Message, Response, Source
@@ -40,7 +46,9 @@ class AssistantService:
 
     def handle(self, msg: Message) -> Response:
         start = time.perf_counter()
-        if looks_like_injection(msg.text):  # Lab 8: refuse attempts to change the rules
+        if looks_like_injection(msg.text):  # Lab 8 G1: refuse attempts to change the rules
+            resp = Response(answer=INJECTION_REPLY, intent=Intent.UNKNOWN, path="abstain")
+        elif looks_like_viet_impersonation(msg.text):  # Lab 8 G2 (Bonus #84): block Vietnamese authority impersonation
             resp = Response(answer=INJECTION_REPLY, intent=Intent.UNKNOWN, path="abstain")
         else:
             intent = route(msg.text, self.offices.names)
