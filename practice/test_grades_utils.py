@@ -20,6 +20,16 @@ def test_letter():
 
 
 # ---- your regression tests (one per bug report) -----------------------------
-# def test_bug1_average_empty(): ...
-# def test_bug2_top_n_returns_n(): ...
+def test_bug1_average_empty():
+    """BUG-1: average of an empty list must return 0.0, not crash."""
+    assert average([]) == 0.0
+
+
+def test_bug2_top_n_returns_n():
+    """BUG-2: top_n must return exactly n names, not n-1."""
+    scores = {"An": 9, "Binh": 7, "Chi": 8, "Dung": 6}
+    assert len(top_n(scores, 3)) == 3
+    assert top_n(scores, 1) == ["An"]
+
+
 # def test_bug3_add_grade_new_book_each_time(): ...

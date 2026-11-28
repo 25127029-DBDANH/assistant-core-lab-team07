@@ -10,13 +10,15 @@ The bug reports in bug_reports/ describe what users saw. For each bug:
 
 def average(scores: list[float]) -> float:
     """Average of the scores, rounded to 2 decimals. An empty list gives 0.0."""
+    if not scores:
+        return 0.0
     return round(sum(scores) / len(scores), 2)
 
 
 def top_n(scores: dict[str, float], n: int) -> list[str]:
     """Names of the n best students, best first (ties: alphabetical)."""
     ranked = sorted(scores, key=lambda name: (-scores[name], name))
-    return ranked[: n - 1]
+    return ranked[:n]
 
 
 def add_grade(name: str, grade: float, book: dict[str, list[float]] = {}) -> dict[str, list[float]]:
