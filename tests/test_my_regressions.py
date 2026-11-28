@@ -148,4 +148,3 @@ def test_ui_new_conversation_resets_session_state_and_messages(monkeypatch):
     assert len(at.session_state.messages) == 1
     assert at.session_state.messages[0]["content"] == WELCOME
     assert len(at.session_state.rated) == 0
-
