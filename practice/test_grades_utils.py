@@ -15,6 +15,15 @@ def test_add_grade_happy():
     assert add_grade("An", 8.0, {}) == {"An": [8.0]}
 
 
+def test_bug3_add_grade_isolated_books():
+    first_book = add_grade("An", 8.0)
+    second_book = add_grade("Binh", 6.0)
+
+    assert first_book == {"An": [8.0]}
+    assert second_book == {"Binh": [6.0]}
+    assert first_book is not second_book
+
+
 def test_letter():
     assert [letter(x) for x in (9, 7.5, 6, 4.5, 2)] == ["A", "B", "C", "D", "F"]
 
