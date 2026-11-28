@@ -26,7 +26,7 @@ This undercharges by 1,350,000 VND.
 
 ## Evidence
 
-The baseline failure was reproduced with the query above and the default settings. The regression test `tests/test_my_regressions.py::test_retake_number_as_word` now checks that the response includes `9,450,000` and excludes `8,100,000`.
+Running the original `parse_credits` from pre-mitigation commit `97015bf` with the query returns `(18, 0)`. At the default rate and multiplier, that produces `Your tuition is 8,100,000 VND.` The regression test `tests/test_my_regressions.py::test_retake_number_as_word` now checks that the response includes `9,450,000` and excludes `8,100,000`.
 
 ## Cause (after investigation)
 
